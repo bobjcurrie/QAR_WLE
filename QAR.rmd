@@ -3,6 +3,7 @@ title: "QAR"
 author: "Bob Currie"
 date: "December 18, 2017"
 output: html_document
+output_dir: "."
 ---
 
 ```{r setup, include=FALSE}
