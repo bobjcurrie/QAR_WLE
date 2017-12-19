@@ -2,13 +2,21 @@ library(mlbench); library(caret); library(dplyr); library(e1071); library(MASS);
 
 set.seed(1234)
 
+## download files from web
+linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training"
+linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training"
+
+download.file(url = linkTraining, destfile = "pml-training.csv")
+download.file(url = linkTesting, destfile = "pml-testing.csv")
+
+## read downloaded CSV files into R dataframes
 qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
 dim(qar_wle)
 str(qar_wle)
 
-#test data
-#https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
-wle_testing <- read.csv("pml-testing.csv", header = TRUE, stringsAsFactors = FALSE)
+qar_testing <- read.csv("pml-testing.csv", header = TRUE, stringsAsFactors = FALSE)
+dim(qar_testing)
+str(qar_testing)
 
 qar_wle$classe <- as.factor(qar_wle$classe)
 qar_wle$user_name <- as.factor(qar_wle$user_name)
