@@ -3,14 +3,14 @@ library(mlbench); library(caret); library(dplyr); library(e1071); library(MASS);
 set.seed(1234)
 
 ## download files from web
-linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training"
-linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training"
+linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
 
 download.file(url = linkTraining, destfile = "pml-training.csv")
 download.file(url = linkTesting, destfile = "pml-testing.csv")
 
 ## read downloaded CSV files into R dataframes
-qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
+qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE, na.strings = "")
 dim(qar_wle)
 str(qar_wle)
 
