@@ -10,7 +10,8 @@ download.file(url = linkTraining, destfile = "pml-training.csv")
 download.file(url = linkTesting, destfile = "pml-testing.csv")
 
 ## read downloaded CSV files into R dataframes
-qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE, na.strings = "")
+qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
+
 dim(qar_wle)
 str(qar_wle)
 
@@ -20,6 +21,13 @@ str(qar_testing)
 
 qar_wle$classe <- as.factor(qar_wle$classe)
 qar_wle$user_name <- as.factor(qar_wle$user_name)
+qar_wle$new_window <- as.factor(qar_wle$new_window)
+
+for (i in c(8:159)) {
+    qar_wle[,i] <- as.numeric(qar_wle[,i])
+}
+
+qar_wle <- qar_wle[qar_wle$new_window == "yes",]
 
 #use 75% of data set for this example
 inTraining <- createDataPartition(qar_wle$classe, p = .20, list = FALSE)
