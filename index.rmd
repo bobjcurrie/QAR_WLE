@@ -1,5 +1,5 @@
 ---
-title: "QAR"
+title: "Coursera Practical Machine Learning Course Project"
 author: "Bob Currie"
 date: "December 18, 2017"
 output: html_document
@@ -10,19 +10,38 @@ output_dir: "."
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+### Qualitative Activity Recognition (Prediction) of Weight Lifting Exercises
+
 ## Synopsis
+The data used for this project was obtained from a study conducted by
+see: 
+The study used trackers to obtained measurements from 6 diffrent participants as they correctly and incorrectly performed sets of dumbbell curls. The readings from the trackers were collected for a series of rolling time windows of (explain here). The result was 19602 observations with 160 features.
+
+Using a random forest model, we see that .
+
+When tested on a testing set withheld from the data, 
 
 ## Data Processing
 
-This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+Download the datasets from the web and then read them into R dataframes
 
-When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+Note: There are two files associated with this project. "pml-training.csv" and "pml-testing.csv". It is important to note that "pml-testing" is used ONLY for the Prediction Quiz portion. The "pml-training" dataset will be read into an R dataframe (**qarwle**), then split into two datafames; qarwle_train (for developing and training the model), and qarwle_test (for measuring out of sample model error and accuracy)
 
 ```{r cars}
 summary(cars)
+
+## Download files from web
+linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+
+# Download to working directory
+download.file(url = linkTraining, destfile = "pml-training.csv")
+download.file(url = linkTesting, destfile = "pml-testing.csv")
 ```
 
-## Including Plots
+### Data Pre-processing and Tidying
+
+### Including Plots
 
 You can also embed plots, for example:
 
@@ -32,6 +51,10 @@ plot(pressure)
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
 
-## Data Pre-processing / Tidying
+
+
+
+
+
 
 ## Results

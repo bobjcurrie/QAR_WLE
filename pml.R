@@ -4,64 +4,76 @@ set.seed(1234)
 
 ## download files from web
 linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
 download.file(url = linkTraining, destfile = "pml-training.csv")
 download.file(url = linkTesting, destfile = "pml-testing.csv")
 
 ## read downloaded CSV files into R dataframes
-qar_wle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
+qarwle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
 
-dim(qar_wle)
-str(qar_wle)
+dim(qarwle)
+str(qarwle)
 
-qar_testing <- read.csv("pml-testing.csv", header = TRUE, stringsAsFactors = FALSE)
-dim(qar_testing)
-str(qar_testing)
+testing <- read.csv("pml-testing.csv", header = TRUE, stringsAsFactors = FALSE)
+dim(testing)
+str(testing)
 
-qar_wle$classe <- as.factor(qar_wle$classe)
-qar_wle$user_name <- as.factor(qar_wle$user_name)
-qar_wle$new_window <- as.factor(qar_wle$new_window)
+qarwle$classe <- as.factor(qarwle$classe)
+qarwle$user_name <- as.factor(qarwle$user_name)
+qarwle$new_window <- as.factor(qarwle$new_window)
 
 for (i in c(8:159)) {
-    qar_wle[,i] <- as.numeric(qar_wle[,i])
+    qarwle[,i] <- as.numeric(qarwle[,i])
 }
 
-qar_wle <- qar_wle[qar_wle$new_window == "yes",]
-
 #use 75% of data set for this example
-inTraining <- createDataPartition(qar_wle$classe, p = .20, list = FALSE)
-qar_wle <- qar_wle[inTraining, ]
+inTraining <- createDataPartition(qarwle$classe, p = .20, list = FALSE)
+qarwle <- qarwle[inTraining, ]
 
-qar_wle <- qar_wle[qar_wle$new_window == "yes", ]
+qarwle <- qarwle[qarwle$new_window == "yes", ]
 
 
-classe <- qar_wle$classe
+classe <- qarwle$classe
 table(classe)
+
+table(qarwle$user_name, qarwle$classe)
 
 #only belt measurements (cols) for this example
 include <- c("belt", "arm", "dumbbell")
-qar_wle <- qar_wle[grep(paste(include, collapse = "|"), names(qar_wle))]
-#qar_wle <- qar_wle[grep("+belt", names(qar_wle))]
-qar_wle$classe <- classe
+qarwle <- qarwle[grep(paste(include, collapse = "|"), names(qarwle))]
+#qarwle <- qarwle[grep("+belt", names(qarwle))]
+
+qarwle <- qarwle[,-c(1:7)]
+
+qarwle$classe <- classe
 
 #also let's remove the calculated vars for each complete window of the exercise
 #kurtosis, skewness, max, min, amplitude, var, avg, std_dev
 remove <- c("kurtosis", "skewness", "max", "min", "amplitude", "var", "avg", "stddev")
-qar_wle <- qar_wle[-grep(paste(remove, collapse = "|"), names(qar_wle))]
+qarwle <- qarwle[-grep(paste(remove, collapse = "|"), names(qarwle))]
 
 #build the rf model
 
 #training and testing data sets
-inTraining <- createDataPartition(qar_wle$classe, p = .75, list = FALSE)
-training <- qar_wle[inTraining,]
-testing <- qar_wle[-inTraining,]
+inTraining <- createDataPartition(qarwle$classe, p = .75, list = FALSE)
+training <- qarwle[inTraining,]
+testing <- qarwle[-inTraining,]
 
 dim(training); dim(testing)
 
 #use x / y syntax
-x <- training[, -53]
-y <- training[, 53]
+x <- training[, -53] #-53
+y <- training[, 53] #53
+
+
+corMatrix <- cor(qarwle[, -53])
+print(corMatrix)
+highlyCorrelated <- findCorrelation(corMatrix, cutoff = 0.8)
+CorrelatedVars <- names(qarwle)[highlyCorrelated]
+print(CorrelatedVars)
+
+qarwle <- qarwle[, -which(names(qarwle) %in% CorrelatedVars)]
 
 #configure trainControl object
 rfModelControl <- trainControl(method = "cv",
@@ -73,9 +85,8 @@ cluster <- makeCluster(detectCores() - 1) # leave 1 core for OS
 registerDoParallel(cluster)
 
 #develop training model
-system.time(rfModel <- train(x, y, method = "rf", data = qar_wle, trControl = rfModelControl))
-
-#svm model
+system.time(rfModel <- train(x, y, method = "rf", data = qarwle, trControl = rfModelControl))
+svm model
 system.time(svmModel <- svm(training$classe ~ ., training))
 
 #LDA model
@@ -89,6 +100,11 @@ rfModel
 rfModel$resample
 rfModel$finalModel
 confusionMatrix.train(rfModel)
+
+
+varImp(rfModel, scale = FALSE)
+predictors(rfModel)
+plot(rfModel)
 
 #predict using test data set
 rfPredictions <- predict(rfModel, testing)
