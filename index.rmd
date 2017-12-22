@@ -21,6 +21,7 @@ Using a random forest model, we see that .
 
 When tested on a testing set withheld from the data, 
 
+
 ## Data Processing
 
 Download the datasets from the web and then read them into R dataframes
@@ -32,7 +33,7 @@ summary(cars)
 
 ## Download files from web
 linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
 # Download to working directory
 download.file(url = linkTraining, destfile = "pml-training.csv")
