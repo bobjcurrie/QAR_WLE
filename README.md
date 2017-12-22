@@ -7,7 +7,7 @@ https://www.coursera.org/learn/practical-machine-learning/peer/R43St/prediction-
 
 ### Qualitative Activity Recognition of Weight Lifting Exercises
 
-The purpose of this project is to use machine learning to predict whether a weight-lifting exercise (in this case dumbbell curls) is performed correctly.
+The purpose of this project is to use machine learning to predict whether a weight-lifting exercise (in this case, dumbbell curls) is performed correctly.
 
 Background and information on the Weight Lifting Exercise dataset used can be found here:
 http://web.archive.org/web/20161224072740/http:/groupware.les.inf.puc-rio.br/har
