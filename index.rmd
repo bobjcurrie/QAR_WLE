@@ -1,61 +1,197 @@
 ---
 title: "Coursera Practical Machine Learning Course Project"
 author: "Bob Currie"
-date: "December 18, 2017"
+date: "December 31, 2017"
 output: html_document
 output_dir: "."
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE, comment = "", cache = TRUE)
+
+## load required libraries
+library(caret);
+library(dplyr);
+library(parallel);
+library(doParallel)
+
+## NOTE: the parallel and doParallel libraries are required to enable parallel processing, which will increase decrease the processing time required of any calculation-intensive (e.g. random forest) models we compute. Also note that the code used in the model section is specific to Windows x86 architecture.
+
 ```
 
-### Qualitative Activity Recognition (Prediction) of Weight Lifting Exercises
+## Prediction Assignment
 
-## Synopsis
-The data used for this project was obtained from a study conducted by
-see: 
-The study used trackers to obtained measurements from 6 diffrent participants as they correctly and incorrectly performed sets of dumbbell curls. The readings from the trackers were collected for a series of rolling time windows of (explain here). The result was 19602 observations with 160 features.
+### Introduction
+The data used for this project was obtained from the study *"Qualitative Activity Recognition of Weight Lifting Exercises"* (Velleso, et al, 2013). The study used sensors to obtain measurements from six different participants as they correctly and incorrectly performed sets of dumbbell curls.
 
-Using a random forest model, we see that .
+Participants each performed a set of 10 repetitions of dumbbell biceps curls, according to the following specifications (as supervised by an experienced weight lifter).
 
-When tested on a testing set withheld from the data, 
+Class   Exercise Specification
+-----   ----------------------
+A       Correctly performed
+B       Throwing the elbows to the front
+C       Lifting the dumbbell only halfway
+D       Lowering the dumbbell only halfway
+E       Throwing the hips to the front
+
+Sensors were attached to the participants' gloves(**forearm**), **arm**, **belt**, and to the **dumbbell** itself. The readings from the sensors were collected using a sliding window approach with different lengths from 0.5 to 2.5 seconds, with a 0.5 second overlap. Measurements taken included 3-axis (x, y and z) accelerometer, gyroscope, and magnetometer readings, as well as Euler angles (roll, pitch and yaw) from each sensor. In addition, eight additional features were calculated for for each Euler angle; mean, variance, standard deviation,  maximum, minimum,  amplitude, kurtosis, and skewness (generating in total 96 derived feature sets).
+
+The objective of this project is two-fold:
+
+1. To develop a mutli-classification machine learning model (using the training dataset) to enable us to accurately predict the class of each exercise.
+
+2. To use this model to predict the class of the observations in the provided testing dataset and submit these predictions for course grading.
 
 
-## Data Processing
+### Data Loading, Tidying, and Feature Selection
 
-Download the datasets from the web and then read them into R dataframes
+The first step is to download the datasets from the web and read them into R dataframes
 
-Note: There are two files associated with this project. "pml-training.csv" and "pml-testing.csv". It is important to note that "pml-testing" is used ONLY for the Prediction Quiz portion. The "pml-training" dataset will be read into an R dataframe (**qarwle**), then split into two datafames; qarwle_train (for developing and training the model), and qarwle_test (for measuring out of sample model error and accuracy)
+Note: There are two files associated with this project, "pml-training.csv" and "pml-testing.csv". It is important to note that "pml-testing" is used ONLY for the Prediction Quiz portion. The "pml-training" dataset will be read into an R dataframe (**qarwle**), then split into two datafames; **training** (for developing and training the model), and **testing** (for measuring out of sample model error and accuracy).
 
-```{r cars}
-summary(cars)
+```{r data}
 
 ## Download files from web
-linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+#linkTraining <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+#linkTesting <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
 
 # Download to working directory
-download.file(url = linkTraining, destfile = "pml-training.csv")
-download.file(url = linkTesting, destfile = "pml-testing.csv")
+#download.file(url = linkTraining, destfile = "pml-training.csv")
+#download.file(url = linkTesting, destfile = "pml-testing.csv")
+
+qarwle <- read.csv("pml-training.csv", header = TRUE, stringsAsFactors = FALSE)
+quiz_testing <- read.csv("pml-testing.csv", header = TRUE, stringsAsFactors = FALSE)
+
+dim(qarwle); dim(quiz_testing)
+str(qarwle)
+
 ```
 
-### Data Pre-processing and Tidying
+#### Data Tidying
 
-### Including Plots
+We see from looking at the structure of the dataframe that there are several features that either have empty (character) data or missing (NA) data. We will deal with those variables in a moment.
 
-You can also embed plots, for example:
+First, let's convert the classe variable into a factor, and also convert all other features into numeric variables
 
-```{r pressure, echo=FALSE}
-plot(pressure)
+```{r tidy}
+
+class(qarwle$classe)
+
+qarwle$classe <- as.factor(qarwle$classe)
+qarwle$user_name <- as.factor(qarwle$user_name)
+
+for (i in c(8:159)) {
+    qarwle[,i] <- as.numeric(qarwle[,i])
+}
+
 ```
 
-Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+Let's briefly summarize our dataframe:
+
+```{r summarize}
+table(qarwle$classe)
+
+table(qarwle$user_name, qarwle$classe)
+
+```
+
+#### Feature Selection
+
+We see from looking at the dataframe that the derived features are not calculated for every observation. As a matter of fact, they are only calculated for each new window (records where new_window = "yes"). Let's look at only the "avg"" derived variables for the belt features as a demonstration.
+
+```{r }
+
+## new window is "yes", we see the derived features
+head(qarwle[qarwle$new_window == "yes", c(28, 31, 34)],20)
+
+## new window is "no", there aren't any derived features
+head(qarwle[qarwle$new_window == "no", c(28, 31, 34)],20)
+
+```
+
+Rather than impute these features for the observations with missing variables, we will remove them from the dataset used to develop the model. This has the added benefit of removing features that we assume will be highly correlated with existing features.
+
+```{r }
+
+remove <- c("kurtosis", "skewness", "max", "min", "amplitude", "var", "avg", "stddev")
+
+qarwle <- qarwle[-grep(paste(remove, collapse = "|"), names(qarwle))]
+
+dim(qarwle); names(qarwle)
+
+```
+
+We can also remove the first seven features of the dataset, as they contain info such as user_name, timestamp and window data, which are not relevant
+
+```{r }
+
+qarwle <- qarwle[,-c(1:7)]
+
+```
+
+### Model Development
+
+We will use the tools in the R 'caret' package to develop a model
+
+First, let's use cross-validation by breaking the qarwle dataframe into training and testing dataframes.
+
+```{r}
+
+# split dataframe into training (75% of obs) and testing (25%) data sets
+inTraining <- createDataPartition(qarwle$classe, p = .75, list = FALSE)
+training <- qarwle[inTraining,]
+testing <- qarwle[-inTraining,]
+
+dim(training); dim(testing)
+
+# Use x / y syntax
+x <- training[, -53]
+y <- training[, 53]
+
+```
 
 
+Let's now develop the model. We will develop a "random forest" model using the caret's package train function.
+
+NOTE: Please see [Improving Performance of Random Forest in caret::train()](https://github.com/lgreski/datasciencectacontent/blob/master/markdown/pml-randomForestPerformance.md)
 
 
+```{r model}
 
+#configure trainControl object
+rfModelControl <- trainControl(method = "cv",
+                           number = 5,
+                           allowParallel = TRUE)
 
+#configure parallel processing
+cluster <- makeCluster(detectCores() - 1) # leave 1 core for OS
+registerDoParallel(cluster)
 
-## Results
+#develop training model
+system.time(rfModel <- train(x, y, method = "rf", data = qarwle, trControl = rfModelControl))
+
+#stop the cluster nad return R to single threaded processing
+stopCluster(cluster)
+registerDoSEQ()
+
+```
+
+### Results
+
+```{r results}
+
+rfModel
+confusionMatrix.train(rfModel)
+
+varImp(rfModel, scale = FALSE)
+predictors(rfModel)
+plot(rfModel)
+
+#predict using testing data set
+rfPredictions <- predict(rfModel, testing)
+confusionMatrix(rfPredictions, testing$classe)
+
+# Quiz
+finalPredict <- predict(rfModel, quiz_testing)
+finalPredict
+```

@@ -1,4 +1,4 @@
-# Practical Macine Learning Course
+# Coursera Data SciencePractical Macine Learning Course
 ## Prediction Assignment
 
 Coursera Practical Machine Learning Course: Week 4 Assignment - Prediction Assignment and Writeup
