@@ -172,12 +172,12 @@ $(document).ready(function () {
 <p>The first step is to download the datasets from the web and read them into R dataframes</p>
 <p>Note: There are two files associated with this project, “pml-training.csv” and “pml-testing.csv”. It is important to note that “pml-testing” is used ONLY for the Prediction Quiz portion. The “pml-training” dataset will be read into an R dataframe (<strong>qarwle</strong>), then split into two datafames; <strong>training</strong> (for developing and training the model), and <strong>testing</strong> (for measuring out of sample model error and accuracy).</p>
 <pre class="r"><code>## Download files from web
-#linkTraining &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
-#linkTesting &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;
+linkTraining &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv&quot;
+linkTesting &lt;- &quot;https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv&quot;
 
 # Download to working directory
-#download.file(url = linkTraining, destfile = &quot;pml-training.csv&quot;)
-#download.file(url = linkTesting, destfile = &quot;pml-testing.csv&quot;)
+download.file(url = linkTraining, destfile = &quot;pml-training.csv&quot;)
+download.file(url = linkTesting, destfile = &quot;pml-testing.csv&quot;)
 
 qarwle &lt;- read.csv(&quot;pml-training.csv&quot;, header = TRUE, stringsAsFactors = FALSE)
 quiz_testing &lt;- read.csv(&quot;pml-testing.csv&quot;, header = TRUE, stringsAsFactors = FALSE)
@@ -423,8 +423,8 @@ registerDoParallel(cluster)
 #develop training model
 system.time(rfModel &lt;- train(x, y, method = &quot;rf&quot;, data = qarwle, trControl = rfModelControl))</code></pre>
 <pre><code>   user  system elapsed 
-  56.63    2.26  633.09 </code></pre>
-<pre class="r"><code>#stop the cluster nad return R to single threaded processing
+  72.16    3.17  728.98 </code></pre>
+<pre class="r"><code>#stop the cluster and return R to single threaded processing
 stopCluster(cluster)
 registerDoSEQ()</code></pre>
 </div>
